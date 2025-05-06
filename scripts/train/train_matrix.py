@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../../../spmarl')
+sys.path.append("../")
 import os
 import wandb
 import socket
@@ -10,7 +10,11 @@ import torch
 from config import get_config
 from envs.env_wrappers import MatrixShareSelfPacedSubprocVecEnv, ShareDummyVecEnv
 from deep_sprl.make_teacher import make_teacher
+
+
+
 """Train script for Matrix."""
+
 
 def make_train_env(all_args, teacher=None):
     def get_env_fn(rank):
@@ -19,7 +23,8 @@ def make_train_env(all_args, teacher=None):
                 from envs.matrix.matrix_env import ClimbingEnv
                 env = ClimbingEnv(all_args)
             else:
-                print("Can not support the " + all_args.env_name + "environment.")
+                print("Can not support the " +
+                      all_args.env_name + "environment.")
                 raise NotImplementedError
             env.seed(all_args.seed + rank * 1000)
             return env
@@ -39,7 +44,8 @@ def make_eval_env(all_args, teacher=None):
                 from envs.matrix.matrix_env import ClimbingEnv
                 env = ClimbingEnv(all_args)
             else:
-                print("Can not support the " + all_args.env_name + "environment.")
+                print("Can not support the " +
+                      all_args.env_name + "environment.")
                 raise NotImplementedError
             env.seed(all_args.seed * 50000 + rank * 10000)
             return env
@@ -59,8 +65,8 @@ def parse_args(args, parser):
     parser.add_argument("--num_agents", type=int, default=20)
     parser.add_argument("--lower_context_bound", type=int, default=2)
     parser.add_argument("--upper_context_bound", type=int, default=20)
-    parser.add_argument("--init_mean", type=float, default=10)
-    parser.add_argument("--init_var", type=float, default=100)
+    parser.add_argument("--init_mean", type=float, default=6)
+    parser.add_argument("--init_var", type=float, default=16)
     parser.add_argument("--target_mean", type=float, default=20)
     parser.add_argument("--target_var", type=float, default=4e-3)
     parser.add_argument("--std_lower_bound", type=float, default=0.2)
@@ -68,8 +74,7 @@ def parse_args(args, parser):
     parser.add_argument("--max_kl", type=float, default=0.05)
     parser.add_argument("--perf_lb", type=float, default=0.5)
     parser.add_argument('--teacher', type=str,
-                        default='no_teacher', choices=['sprl', 'random', 'linear', 'no_teacher', 'spmarl'], help="observation range")
-
+                        default='no_teacher', choices=['sprl', 'random', 'linear', 'invlinear', 'no_teacher', 'spmarl', 'alpgmm', 'vacl'], help="observation range")
 
     all_args = parser.parse_known_args(args)[0]
 
@@ -79,7 +84,7 @@ def parse_args(args, parser):
 def main(args):
     parser = get_config()
     all_args = parse_args(args, parser)
-
+    all_args.seed = np.random.randint(1000, 10000)
     if all_args.algorithm_name == "rmappo":
         print("u are choosing to use rmappo, we set use_recurrent_policy to be True")
         all_args.use_recurrent_policy = True
@@ -88,15 +93,15 @@ def main(args):
         assert (all_args.use_recurrent_policy == False and all_args.use_naive_recurrent_policy == False), (
             "check recurrent policy!")
         print("u are choosing to use mappo, we set use_recurrent_policy & use_naive_recurrent_policy to be False")
-        all_args.use_recurrent_policy = False 
+        all_args.use_recurrent_policy = False
         all_args.use_naive_recurrent_policy = False
     elif all_args.algorithm_name == "ippo":
         print("u are choosing to use ippo, we set use_centralized_V to be False")
         all_args.use_centralized_V = False
-    elif all_args.algorithm_name == "happo"  or all_args.algorithm_name == "hatrpo":
+    elif all_args.algorithm_name == "happo" or all_args.algorithm_name == "hatrpo":
         # can or cannot use recurrent network?
         print("using", all_args.algorithm_name, 'without recurrent network')
-        all_args.use_recurrent_policy = False 
+        all_args.use_recurrent_policy = False
         all_args.use_naive_recurrent_policy = False
     else:
         raise NotImplementedError
@@ -119,25 +124,24 @@ def main(args):
         torch.set_num_threads(all_args.n_training_threads)
 
     run_dir = Path(os.path.split(os.path.dirname(os.path.abspath(__file__)))[
-                       0] + "/results") / all_args.env_name / all_args.scenario_name / all_args.algorithm_name / all_args.experiment_name
+        0] + "/results") / all_args.env_name / all_args.scenario_name / all_args.algorithm_name / all_args.experiment_name
     if not run_dir.exists():
         os.makedirs(str(run_dir))
 
     if all_args.use_wandb:
         run = wandb.init(config=all_args,
-                         project=all_args.env_name,
-                         entity='spmarlli',
+                         project=all_args.env_name+"_spmarl4",
+                         entity='wszhao_aalto',
                          notes=socket.gethostname(),
                          name=str(all_args.algorithm_name) + "_" +
-                              str(all_args.experiment_name) + "_" + 
-                              str(all_args.scenario_name,) +
-                              "_seed" + str(all_args.seed),
-                        #  group=all_args.map_name,
+                         str(all_args.scenario_name,) +
+                         "_seed" + str(all_args.seed),
+                         #  group=all_args.map_name,
                          dir=str(run_dir),
                          job_type="training",
-                         tags=["aamas24"],
+                         tags=["icml2025"],
                          reinit=True)
-        all_args = wandb.config # for wandb sweep
+        all_args = wandb.config  # for wandb sweep
     else:
         if not run_dir.exists():
             curr_run = 'run1'
@@ -157,20 +161,22 @@ def main(args):
             all_args.user_name))
 
     # seed
+
     torch.manual_seed(all_args.seed)
     torch.cuda.manual_seed_all(all_args.seed)
     np.random.seed(all_args.seed)
 
     if all_args.teacher is not None:
-        teacher=make_teacher(teacher=all_args.teacher, args=all_args)
+        teacher = make_teacher(teacher=all_args.teacher, args=all_args)
     else:
-        teacher=None
-        raise RuntimeError('Please specify the teacher') 
+        teacher = None
+        raise RuntimeError('Please specify the teacher')
     # env
     envs = make_train_env(all_args, teacher=teacher)
-    eval_envs = make_eval_env(all_args, teacher=teacher) if all_args.use_eval else None
-    max_num_agents=all_args.max_num_agents
-    num_agents=all_args.max_num_agents
+    eval_envs = make_eval_env(
+        all_args, teacher=teacher) if all_args.use_eval else None
+    max_num_agents = all_args.max_num_agents
+    num_agents = all_args.max_num_agents
     config = {
         "all_args": all_args,
         "envs": envs,
@@ -201,7 +207,8 @@ def main(args):
     if all_args.use_wandb:
         run.finish()
     else:
-        runner.writter.export_scalars_to_json(str(runner.log_dir + '/summary.json'))
+        runner.writter.export_scalars_to_json(
+            str(runner.log_dir + '/summary.json'))
         runner.writter.close()
 
 

@@ -212,6 +212,7 @@ def cmarl_worker(remote, parent_remote, env_fn_wrapper):
         else:
             raise NotImplementedError
 
+
 class CMARLSubprocVecEnv(ShareVecEnv):
     def __init__(self, env_fns, teacher=None, spaces=None, eval=False):
         """
@@ -552,7 +553,46 @@ def shareworker(remote, parent_remote, env_fn_wrapper):
         else:
             raise NotImplementedError
         
+def cmasshareselfpacedworker(remote, parent_remote, env_fn_wrapper):
+    parent_remote.close()
+    env = env_fn_wrapper.x()
+    parent_remote.close()
+    env = env_fn_wrapper.x()
+    while True:
+        cmd, data = remote.recv()
+        if cmd == 'step':
+            ob, share_obs, reward, done, info, s_reward, s_done = env.step(data)
+            if 'bool' in done.__class__.__name__:
+                if done:
+                    ob, share_obs, info = env.reset()
+            else:
+                if np.all(done):
+                    ob, share_obs, info = env.reset()
 
+            remote.send((ob, share_obs, reward, done, info, s_reward, s_done))
+        elif cmd == 'reset':
+            ob, share_obs, info = env.reset()
+            remote.send((ob, share_obs, info))
+        elif cmd == 'render':
+            if data == "rgb_array":
+                fr = env.render(mode=data)
+                remote.send(fr)
+            elif data == "human":
+                env.render(mode=data)
+        elif cmd == 'reset_task':
+            ob = env.reset_task()
+            remote.send(ob)
+        elif cmd == 'close':
+            env.close()
+            remote.close()
+            break
+        elif cmd == 'get_spaces':
+            remote.send((env.observation_space, env.share_observation_space, env.action_space))
+        elif cmd == 'update_context':
+            env.update_context(context=data)
+        else:
+            raise NotImplementedError
+        
 def shareselfpacedworker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.x()
@@ -734,6 +774,172 @@ class ShareSubprocVecEnv(ShareVecEnv):
             p.join()
         self.closed = True
 
+class CMASShareSelfPacedSubprocVecEnv(ShareVecEnv):
+    def __init__(self, env_fns, teacher=None, args=None, eval=False):
+        """
+        envs: list of gym environments to run in subprocesses
+        """
+        self.waiting = False
+        self.closed = False
+        self.train = True
+        nenvs = len(env_fns)
+
+        self.context_buffer = ContextBuffer(dim=1, max_buffer_size=10000)
+        
+        self.teacher=teacher
+        self.eval = eval
+        self.teacher_name=self.teacher.teacher_name
+        self.target=self.teacher.target
+        
+        self.max_agents=args.max_num_agents
+
+        self.total_steps=0
+        
+        self.undiscounted_rewards = np.zeros(len(env_fns))
+        self.discounted_rewards = np.zeros(len(env_fns))
+        self.cur_discs = np.ones(len(env_fns))
+        self.step_lengths = np.zeros(len(env_fns))
+        
+        self.cur_contexts = [None] * len(env_fns)
+        self.processed_contexts = [None] * len(env_fns)
+        self.cur_initial_states = [None] * len(env_fns)
+
+        self.discount_factor = args.gamma
+        
+        self.remotes, self.work_remotes = zip(*[Pipe() for _ in range(nenvs)])
+        self.ps = [Process(target=cmasshareselfpacedworker, args=(work_remote, remote, CloudpickleWrapper(env_fn)))
+                   for (work_remote, remote, env_fn) in zip(self.work_remotes, self.remotes, env_fns)]
+        for p in self.ps:
+            p.daemon = True  # if the main process crashes, we should not cause things to hang
+            p.start()
+        for remote in self.work_remotes:
+            remote.close()
+        self.remotes[0].send(('get_spaces', None))
+        observation_space, share_observation_space, action_space = self.remotes[0].recv(
+        )
+        ShareVecEnv.__init__(self, len(env_fns), observation_space,
+                             share_observation_space, action_space)
+
+    def step_async(self, actions, active_masks):
+        for remote, action, active_mask in zip(self.remotes, actions, active_masks):
+            action=action[active_mask.squeeze()==True]
+            remote.send(('step', action))
+        self.waiting = True
+
+    def step_wait(self):
+        results = [remote.recv() for remote in self.remotes]
+        self.waiting = False
+        obs, share_obs, rews, dones, infos, s_reward, s_done = zip(*results)
+        obs, share_obs, rews, dones, infos = np.stack(obs), np.stack(share_obs), np.stack(rews), np.stack(dones).squeeze(), np.stack(infos)
+        contexts=np.repeat(np.stack(self.cur_contexts)[:, None], self.max_agents, axis=1)[:,:,None]
+        step=(obs, share_obs, rews, dones, infos, s_reward, s_done)
+        obs, share_obs, rews, dones, infos, s_reward, s_done = self.update(step)
+        
+        return obs, share_obs, rews, dones, infos, contexts
+    
+    def reset(self):
+        # contexts = self.teacher.sample(number=len(self.remotes))
+        # contexts=np.random.randint(low=8, high=20, size=len(self.ps))
+        contexts=self.teacher.sample(size=len(self.ps)).squeeze()
+        if self.eval:
+            contexts=np.ones_like(contexts)*self.target
+        for i in range(len(self.cur_contexts)):
+            self.cur_contexts[i]=contexts[i] 
+        for remote, context in zip(self.remotes, self.cur_contexts): remote.send(('update_context', context))
+        for remote in self.remotes: remote.send(('reset', None))
+            
+        results = [remote.recv() for remote in self.remotes]
+        obs, share_obs, info = zip(*results)
+        
+        return np.stack(obs), np.stack(share_obs), np.stack(info)
+    
+    def reset_data(self, env_id):
+        self.undiscounted_rewards[env_id] = 0.
+        self.discounted_rewards[env_id] = 0.
+        self.cur_discs[env_id] = 1.
+        self.step_lengths[env_id] = 0.
+
+        self.cur_contexts[env_id] = None
+        self.cur_initial_states[env_id] = None
+        
+    def update(self, step):
+        obs, share_obs, rews, dones, infos, s_reward, s_done = step
+        if not self.eval:
+            self.total_steps+=len(self.ps)
+            self.undiscounted_rewards += s_reward # only use the reward of one agent
+            self.discounted_rewards += self.cur_discs * s_reward
+            self.cur_discs *= self.discount_factor
+            self.step_lengths += 1.
+            if any(s_done):
+                index=[i for i, x in enumerate(s_done) if x]
+                for i in index:
+                    # context=np.random.randint(low=8, high=20, size=1)
+                    data = self.cur_contexts[i], self.undiscounted_rewards[i], self.discounted_rewards[i], self.step_lengths[i]
+                    self.context_buffer.update_buffer(data)
+                    self.reset_data(i)
+                    
+                    context=self.teacher.sample(size=1).squeeze()
+                    
+                    self.remotes[i].send(('update_context', context))
+                    self.cur_contexts[i]=context
+                    self.remotes[i].send(('reset', None))
+                    ob, share_ob, info = self.remotes[i].recv()
+                    
+                    obs[i], share_obs[i], infos[i] = ob, share_ob, info
+                    
+            return obs, share_obs, rews, dones, infos, s_reward, s_done
+             
+        else:
+            if any(s_done):
+                index=[i for i, x in enumerate(s_done) if x]
+                for i in index:
+                    context=self.target
+                    self.remotes[i].send(('update_context', context))
+                    self.remotes[i].send(('reset', None))
+                    ob, share_ob, info = self.remotes[i].recv()
+                    obs[i], share_obs[i], infos[i] = ob, share_ob, info
+                    
+            return obs, share_obs, rews, dones, infos, s_reward, s_done
+    
+    def update_teacher(self, *args):
+        context_info={}
+        steps=self.context_buffer.size
+        
+        if self.teacher_name in ['spmarl', 'sprl']:
+            context_info['g_mean']=self.teacher.context_dist.get_weights()[0]
+            context_info['g_std']=np.sqrt(self.teacher.context_dist.covariance_matrix().sum())
+            try:
+                context_info['val_std']=self.teacher.val_std
+                context_info['td_std']=self.teacher.td_std
+            except:
+                pass
+        if self.teacher_name=='spmarl':
+            self.teacher.update_distribution(self.total_steps, self.context_buffer.contexts[:steps], self.context_buffer.returns[:steps], np.stack(args[0])[:, None], np.stack(args[1])[:, None])
+        else:
+            self.teacher.update_distribution(self.total_steps, self.context_buffer.contexts[:steps], self.context_buffer.returns[:steps])
+        
+        context_info['sampled_mean']=self.context_buffer.contexts[:steps].mean()
+        context_info['sampled_std']=self.context_buffer.contexts[:steps].std()
+        self.context_buffer.clear()
+        return context_info
+
+    def reset_task(self):
+        for remote in self.remotes:
+            remote.send(('reset_task', None))
+        return np.stack([remote.recv() for remote in self.remotes])
+
+    def close(self):
+        if self.closed:
+            return
+        if self.waiting:
+            for remote in self.remotes:
+                remote.recv()
+        for remote in self.remotes:
+            remote.send(('close', None))
+        for p in self.ps:
+            p.join()
+        self.closed = True
+
 
 class ShareSelfPacedSubprocVecEnv(ShareVecEnv):
     def __init__(self, env_fns, teacher=None, args=None):
@@ -858,6 +1064,11 @@ class ShareSelfPacedSubprocVecEnv(ShareVecEnv):
         if self.teacher_name in ['spmarl', 'sprl']:
             context_info['g_mean']=self.teacher.context_dist.get_weights()[0]
             context_info['g_std']=np.sqrt(self.teacher.context_dist.covariance_matrix().sum())
+            try:
+                context_info['val_std']=self.teacher.val_std
+                context_info['td_std']=self.teacher.td_std
+            except:
+                pass
         if self.teacher_name=='spmarl':
             self.teacher.update_distribution(self.total_steps, self.context_buffer.contexts[:steps], self.context_buffer.returns[:steps], np.stack(args[0])[:, None], np.stack(args[1])[:, None])
         else:

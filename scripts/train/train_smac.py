@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../../../spmarl')
+sys.path.append("../")
 import os
 import wandb
 import socket
@@ -127,10 +127,10 @@ def parse_args(args, parser):
     parser.add_argument("--target_var", type=float, default=4e-3)
     parser.add_argument("--std_lower_bound", type=float, default=0.2)
     parser.add_argument("--context_kl_threshold", type=float, default=8000)
-    parser.add_argument("--max_kl", type=float, default=0.05)
-    parser.add_argument("--perf_lb", type=float, default=0.5)
+    parser.add_argument("--max_kl", type=float, default=0.1)
+    parser.add_argument("--perf_lb", type=float, default=0.6)
     parser.add_argument('--teacher', type=str,
-                        default='no_teacher', choices=['sprl', 'random', 'linear', 'no_teacher', 'spmarl'], help="observation range")
+                        default='no_teacher', choices=['sprl', 'random', 'linear', 'invlinear', 'no_teacher', 'spmarl', 'alpgmm', 'vacl'], help="observation range")
 
     all_args = parser.parse_known_args(args)[0]
 
@@ -140,6 +140,12 @@ def parse_args(args, parser):
 def main(args):
     parser = get_config()
     all_args = parse_args(args, parser)
+    
+    if all_args.seed_specify:
+        all_args.seed=all_args.seed
+    else:
+        all_args.seed=np.random.randint(1000,10000)
+    print("seed is :",all_args.seed)
 
     if all_args.algorithm_name == "rmappo":
         print("u are choosing to use rmappo, we set use_recurrent_policy to be True")
@@ -189,17 +195,16 @@ def main(args):
 
     if all_args.use_wandb:
         run = wandb.init(config=all_args,
-                         project=all_args.env_name,
-                         entity='spmarlli',
+                         project=all_args.env_name+"_spmarl4",
+                         entity='wszhao_aalto',
                          notes=socket.gethostname(),
                          name=str(all_args.algorithm_name) + "_" +
-                              str(all_args.experiment_name) + "_" + 
                               str(all_args.units) +
                               "_seed" + str(all_args.seed),
                         #  group=all_args.map_name,
                          dir=str(run_dir),
                          job_type="training",
-                         tags=["aamas24"],
+                         tags=[all_args.experiment_name],
                          reinit=True)
         all_args = wandb.config # for wandb sweep
     else:

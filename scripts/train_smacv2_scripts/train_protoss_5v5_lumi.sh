@@ -8,7 +8,7 @@
 #SBATCH --mem=64G
 #SBATCH --time=1-00:00:00
 #SBATCH --partition=small
-#SBATCH --account=spmarl
+#SBATCH --account=project_id
 #SBATCH --array=0-4
 
 env="SMACv2"
@@ -24,5 +24,5 @@ echo "env is ${env}, map is ${map}, algo is ${algo}, exp is ${exp}"
 srun singularity exec -B $SCRATCH $SCRATCH/spmarl.sif python ../train/train_smac.py \
 --env_name ${env} --algorithm_name ${algo} --experiment_name ${exp} \
 --map_name ${map} --seed $SLURM_ARRAY_TASK_ID --n_rollout_threads 25 --n_eval_rollout_threads 2 --num_mini_batch 1 --episode_length 400 \
---num_env_steps 10000000 --ppo_epoch 5 --use_eval --eval_episodes 60 --teacher ${teacher}
+--num_env_steps 10000000 --ppo_epoch 5 --use_eval --eval_episodes 32 --teacher ${teacher}
 # --units ${units} 

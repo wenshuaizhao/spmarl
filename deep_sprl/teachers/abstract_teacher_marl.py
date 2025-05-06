@@ -3,7 +3,7 @@ import numpy as np
 from gym import spaces
 from abc import ABC, abstractmethod
 from deep_sprl.teachers.util import Buffer
-from stable_baselines.common.vec_env import VecEnv
+# from stable_baselines.common.vec_env import VecEnv
 from statistics import mean
 
 class AbstractTeacher(ABC):

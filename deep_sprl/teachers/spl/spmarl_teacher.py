@@ -57,6 +57,9 @@ class SPMARLTeacher(AbstractTeacher, AbstractSPMARLTeacher):
         self.perf_lb = perf_lb
         self.perf_lb_reached = False
         self.teacher_name='spmarl'
+        self.obj_std=0
+        self.val_std=0
+        self.td_std=0
 
         if std_lower_bound is not None and kl_threshold is None:
             raise RuntimeError("Error! Both Lower Bound on standard deviation and kl threshold need to be set")
@@ -106,7 +109,8 @@ class SPMARLTeacher(AbstractTeacher, AbstractSPMARLTeacher):
         # Estimate the value of the state after the policy update
         c_val_t = to_float_tensor(values, use_cuda=False, dtype=torch.float64)
         c_loss_t= to_float_tensor(loss, use_cuda=False, dtype=torch.float64)
-
+        self.td_std = np.std(c_loss_t.detach().numpy())
+        self.val_std = np.std(c_val_t.detach().numpy())
         # Define the KL-Constraint
         def kl_con_fn(x):
             dist = GaussianTorchDistribution.from_weights(self.context_dim, x, dtype=torch.float64)

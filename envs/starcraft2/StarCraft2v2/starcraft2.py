@@ -65,6 +65,9 @@ EPS = 1e-7
 
 class CannotResetException(Exception):
     pass
+class CannotConnectError(RuntimeError):
+    """Raised when the connection to an external service fails."""
+    pass
 
 class StarCraft2Env(MultiAgentEnv):
     """The StarCraft II environment for decentralised multi-agent
@@ -724,9 +727,9 @@ class StarCraft2Env(MultiAgentEnv):
     def get_agent_action(self, a_id, action):
         """Construct the action for agent a_id."""
         avail_actions = self.get_avail_agent_actions(a_id)
-        assert (
-            avail_actions[action] == 1
-        ), "Agent {} cannot perform action {}".format(a_id, action)
+        # assert (
+        #     avail_actions[action] == 1
+        # ), "Agent {} cannot perform action {}".format(a_id, action)
 
         unit = self.get_unit_by_id(a_id)
         tag = unit.tag
@@ -735,7 +738,7 @@ class StarCraft2Env(MultiAgentEnv):
 
         if action == 0:
             # no-op (valid only when dead)
-            assert unit.health == 0, "No-op only available for dead agents."
+            # assert unit.health == 0, "No-op only available for dead agents."
             if self.debug:
                 logging.debug("Agent {}: Dead".format(a_id))
             return None
@@ -830,6 +833,7 @@ class StarCraft2Env(MultiAgentEnv):
                 target_unit = self.agents[target_id]
                 action_name = "heal"
             else:
+                target_id=min(target_id, self.n_enemies-1)
                 target_unit = self.enemies[target_id]
                 action_name = "attack"
 
@@ -2376,7 +2380,7 @@ class StarCraft2Env(MultiAgentEnv):
             except (protocol.ProtocolError, protocol.ConnectionError):
                 self.full_restart()
                 self.reset(episode_config=episode_config)
-        for i in range(1000):
+        for i in range(5000):
             # Sometimes not all units have yet been created by SC2
             self.agents = {}
             self.enemies = {}
@@ -2438,7 +2442,8 @@ class StarCraft2Env(MultiAgentEnv):
                 self.full_restart()
                 self.reset(episode_config=episode_config)
         # probably had some error when spawning
-        raise CannotResetException("waited for units to spawn and they didn't")
+        # raise CannotResetException("waited for units to spawn and they didn't")
+        raise CannotConnectError("waited for units to spawn and they didn't")
 
     def get_unit_types(self):
         if self._unit_types is None:

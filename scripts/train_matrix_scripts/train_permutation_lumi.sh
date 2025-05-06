@@ -8,7 +8,7 @@
 #SBATCH --mem=64G
 #SBATCH --time=1-00:00:00
 #SBATCH --partition=small
-#SBATCH --account=spmarl
+#SBATCH --account=project_id
 #SBATCH --array=0-4
 
 env="matrix"

@@ -3,7 +3,7 @@ import sys
 sys.path.append("../")
 import os
 import wandb
-
+# wandb.login(key='42e7d207d3284a031abccd90fec5d448784c4bad')
 import socket
 import setproctitle
 import numpy as np
@@ -72,7 +72,7 @@ def parse_args(args, parser):
     parser.add_argument('--context_kl_threshold', type=float,
                         default=8000, help="lower context bound")
     parser.add_argument('--max_kl', type=float,
-                        default=0.05, help="lower context bound")
+                        default=0.1, help="lower context bound")
     parser.add_argument('--perf_lb', type=float,
                         default=20, help="lower context bound")
     
@@ -87,7 +87,7 @@ def parse_args(args, parser):
     parser.add_argument('--obs_range', type=int,
                         default=6, help="observation range")
     parser.add_argument('--teacher', type=str,
-                        default=None, choices=['sprl', 'random', 'linear', 'no_teacher', 'spmarl'], help="observation range")
+                        default=None, choices=['sprl', 'random', 'linear', 'no_teacher', 'spmarl', 'vacl', 'alpgmm','invlinear'], help="observation range")
     parser.add_argument('--sparse_reward', action='store_true',
                         default=False, help="observation range")
     parser.add_argument('--reward_low', type=float, default=1)
@@ -149,7 +149,7 @@ def main(args):
     # wandb
     if all_args.use_wandb:
         run = wandb.init(config=all_args,
-                         project=all_args.project_name,
+                         project=all_args.env_name+"_spmarl4",
                          entity=all_args.user_name,
                          notes=socket.gethostname(),
                          name=str(all_args.algorithm_name) +
@@ -157,6 +157,7 @@ def main(args):
                          group=all_args.scenario_name,
                          dir=str(run_dir),
                          job_type="training",
+                         tags=[all_args.experiment_name],
                          reinit=True)
     else:
         if not w_run_dir.exists():

@@ -57,6 +57,7 @@ class SelfPacedTeacherV2(AbstractTeacher, AbstractSelfPacedTeacher):
         self.perf_lb = perf_lb
         self.perf_lb_reached = False
         self.teacher_name='sprl'
+        # self.obj_std=0
 
         if std_lower_bound is not None and kl_threshold is None:
             raise RuntimeError("Error! Both Lower Bound on standard deviation and kl threshold need to be set")
@@ -90,7 +91,7 @@ class SelfPacedTeacherV2(AbstractTeacher, AbstractSelfPacedTeacher):
         # TODO: \
         # args: contexts are all the contexts history sampled in this iteration. (Each rollout corresponds to one context). \
         # args: values are all the values for the initial state of rollouts.
-
+        # values=(values - np.min(values)) / (np.max(values) - np.min(values))
         self.iteration += 1
 
         old_context_dist = GaussianTorchDistribution.from_weights(self.context_dim, self.context_dist.get_weights(),
@@ -101,6 +102,7 @@ class SelfPacedTeacherV2(AbstractTeacher, AbstractSelfPacedTeacher):
 
         # Estimate the value of the state after the policy update
         c_val_t = to_float_tensor(values, use_cuda=False, dtype=torch.float64)
+        # self.obj_std = np.std(c_val_t.detach().numpy())
 
         # Define the KL-Constraint
         def kl_con_fn(x):
@@ -211,6 +213,11 @@ class SelfPacedTeacherV2(AbstractTeacher, AbstractSelfPacedTeacher):
             else:
                 print(
                     "Warning! Context optimihation unsuccessful - will keep old values. Message: %s" % res.message)
+                
+        if self.context_dist.get_weights()[self.context_dim: 2 * self.context_dim].max() > np.log(1000):
+            ub_std=np.clip(self.context_dist.get_weights()[self.context_dim: 2 * self.context_dim], -np.inf, np.log(1000))
+            self.context_dist.set_weights(np.concatenate([self.context_dist.get_weights()[:self.context_dim], ub_std]))
+            print("Warning! clip the std to be less than 1000")
 
     def sample(self, size=1):
         sample = self.context_dist.sample(sample_shape=torch.Size([size])).detach().numpy()

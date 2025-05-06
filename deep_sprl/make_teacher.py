@@ -1,6 +1,8 @@
 
 from .teachers.spl import SelfPacedTeacherV2 as SPRL
 from .teachers.spl.spmarl_teacher import SPMARLTeacher as SPMARL
+from .teachers.spl.vacl_teacher import VACLTeacher
+from .teachers.spl.alpgmm_teacher import ALPGMMTeacher
 import numpy as np
 
 class LinearTeacher():
@@ -16,6 +18,23 @@ class LinearTeacher():
         if cur_timestep<= self.threshold:
             self.cur_context = (self.target - self.initial_context) * cur_timestep / self.threshold + \
                         self.initial_context
+        else:
+            self.cur_context= self.target
+    def sample(self, size=1):
+        return np.ones([size])*self.cur_context
+    
+class InvLinearTeacher():
+    def __init__(self, total_timestep, initial_context, target_context):
+        self.total_timestep=total_timestep
+        self.initial_context=initial_context
+        self.target=target_context
+        self.threshold=round(total_timestep*0.8)
+        self.cur_context=self.initial_context
+        self.teacher_name='invlinear'
+
+    def update_distribution(self, cur_timestep, *args, **kwargs):
+        if cur_timestep<= self.threshold:
+            self.cur_context = self.initial_context - (self.initial_context-self.target) * cur_timestep / self.threshold
         else:
             self.cur_context= self.target
     def sample(self, size=1):
@@ -43,6 +62,8 @@ class RandomTeacher():
         return np.clip(np.random.normal(loc=self.target, scale=self.std, size=size), self.lower, self.upper)
     def update_distribution(self, *args, **kwargs):
         pass
+    
+
         
 
 def make_teacher(teacher=None, args=None):
@@ -60,6 +81,7 @@ def make_teacher(teacher=None, args=None):
     KL_THRESHOLD = args.context_kl_threshold
     MAX_KL = args.max_kl
     PERF_LB = args.perf_lb
+    NUM_PARTICLEs=args.n_rollout_threads
 
     bounds = (LOWER_CONTEXT_BOUNDS.copy(), UPPER_CONTEXT_BOUNDS.copy())
     if teacher=='sprl':
@@ -70,6 +92,8 @@ def make_teacher(teacher=None, args=None):
                                     kl_threshold=KL_THRESHOLD, use_avg_performance=True)
     elif teacher == 'linear':
         teacher=LinearTeacher(total_timestep=args.num_env_steps, initial_context=LOWER_CONTEXT_BOUNDS, target_context=TARGET_MEAN)
+    elif teacher == 'invlinear':    
+        teacher=InvLinearTeacher(total_timestep=args.num_env_steps, initial_context=UPPER_CONTEXT_BOUNDS, target_context=TARGET_MEAN)
     elif teacher == 'no_teacher':
         teacher=FixedTeacher(target_context=TARGET_MEAN)
     elif teacher == 'random':
@@ -79,5 +103,10 @@ def make_teacher(teacher=None, args=None):
                                     INITIAL_VARIANCE.copy(), bounds, PERF_LB,
                                     max_kl=MAX_KL, std_lower_bound=STD_LOWER_BOUND.copy(),
                                     kl_threshold=KL_THRESHOLD, use_avg_performance=True)
+    elif teacher == 'vacl':
+        teacher = VACLTeacher(TARGET_MEAN.copy(), TARGET_VARIANCE.copy(), INITIAL_MEAN.copy(),
+                                    INITIAL_VARIANCE.copy(), bounds, NUM_PARTICLEs)
+    elif teacher == 'alpgmm':
+        teacher = ALPGMMTeacher(mins=LOWER_CONTEXT_BOUNDS, maxs=UPPER_CONTEXT_BOUNDS, target_context=TARGET_MEAN, fit_rate=args.n_rollout_threads)
         
     return teacher

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mujoco model="snake_robot">
+    <compiler angle="degree" coordinate="local" inertiafromgeom="true"/>
+    <option integrator="RK4" timestep="0.01"/>
+    <default>
+        <joint armature="1" damping="1" limited="true"/>
+        <geom conaffinity="0" condim="3" density="5.0" friction="1.5 0.1 0.1" margin="0.01"/>
+    </default>
+
+    <worldbody>
+        <!-- Ground plane -->
+        <geom name="floor" pos="0 0 0" size="50 50 0.125" type="plane" material="groundplane"/>
+        
+        <!-- Snake body -->
+        <body name="head" pos="0 0 0.08333333333333333">
+            <joint name="root_x" type="slide" axis="1 0 0" pos="0 0 0"/>
+            <joint name="root_y" type="slide" axis="0 1 0" pos="0 0 0"/>
+            <joint name="root_z" type="slide" axis="0 0 1" pos="0 0 0"/>
+            <joint name="root_rx" type="hinge" axis="1 0 0" pos="0 0 0"/>
+            <joint name="root_ry" type="hinge" axis="0 1 0" pos="0 0 0"/>
+            <joint name="root_rz" type="hinge" axis="0 0 1" pos="0 0 0"/>
+            
+            <geom name="head" type="capsule" size="0.041666666666666664 0.08333333333333333" rgba="0.7 0.7 0 1"/>
+            <body name="segment1" pos="0 0 -0.16666666666666666">
+                            <joint name="joint1" type="hinge" axis="0 1 0" range="-45 45"/>
+                <geom name="segment1" type="capsule" size="0.041666666666666664 0.08333333333333333" rgba="0.7 0.7 0 1"/>
+            <body name="segment2" pos="0 0 -0.16666666666666666">
+                                <joint name="joint2" type="hinge" axis="0 1 0" range="-45 45"/>
+                <geom name="segment2" type="capsule" size="0.041666666666666664 0.08333333333333333" rgba="0.7 0.7 0 1"/>
+            <body name="segment3" pos="0 0 -0.16666666666666666">
+                                    <joint name="joint3" type="hinge" axis="0 1 0" range="-45 45"/>
+                <geom name="segment3" type="capsule" size="0.041666666666666664 0.08333333333333333" rgba="0.7 0.7 0 1"/>
+            <body name="segment4" pos="0 0 -0.16666666666666666">
+                                        <joint name="joint4" type="hinge" axis="0 1 0" range="-45 45"/>
+                <geom name="segment4" type="capsule" size="0.041666666666666664 0.08333333333333333" rgba="0.7 0.7 0 1"/>
+            <body name="segment5" pos="0 0 -0.16666666666666666">
+                                            <joint name="joint5" type="hinge" axis="0 1 0" range="-45 45"/>
+                <geom name="segment5" type="capsule" size="0.041666666666666664 0.08333333333333333" rgba="0.7 0.7 0 1"/>
+                                </body>
+</body>
+</body>
+</body>
+</body>
+        </body>
+    </worldbody>
+
+    <actuator>
+        <motor joint="joint1" gear="100" name="motor1"/>
+        <motor joint="joint2" gear="100" name="motor2"/>
+        <motor joint="joint3" gear="100" name="motor3"/>
+        <motor joint="joint4" gear="100" name="motor4"/>
+        <motor joint="joint5" gear="100" name="motor5"/>
+    </actuator>
+
+    <asset>
+        <texture name="groundplane" type="2d" builtin="checker" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" width="100" height="100"/>
+        <material name="groundplane" texture="groundplane" texrepeat="20 20"/>
+    </asset>
+</mujoco>
