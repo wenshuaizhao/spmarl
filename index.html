@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="description"
-        content="Optimistic MAPPO solves the relative overgeneralization problem in multi-agent policy gradient methods">
-  <meta name="keywords" content="Multi-Agent Learning, Policy Gradient, Relative Overgeneralization">
+        content="We show two flaws in existing reward based curriculum learning algorithms when generating number of agents as curriculum in MARL. Instead, we propose a learning progress metric as a new optimization objective which generates curriculum maximizing the learning progress of agents.">
+  <meta name="keywords" content="Multi-Agent Learning, Curriculum Learning, Learning Progress">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Optimistic Multi-Agent Policy Gradient</title>
+  <title>Learning Progress Driven Multi-Agent Curriculum</title>
 
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
@@ -63,6 +63,13 @@
           More Research
         </a>
         <div class="navbar-dropdown">
+          
+          <a class="navbar-item" href="https://arxiv.org/pdf/2311.01953v2">
+            OptimisticMAPG
+          </a>
+          <a class="navbar-item" href="https://arxiv.org/pdf/2401.08728v3">
+            AgentMixer
+          </a>
           <a class="navbar-item" href="https://arxiv.org/pdf/2401.12574v1">
             BTA
           </a>
@@ -82,17 +89,12 @@
     <div class="container is-max-desktop">
       <div class="columns is-centered">
         <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title">Optimistic Multi-Agent Policy Gradient</h1>
+          <h1 class="title is-1 publication-title">Learning Progress Driven Multi-Agent Curriculum</h1>
           <div class="is-size-5 publication-authors">
             <span class="author-block">
               <a href="https://wenshuaizhao.github.io/">Wenshuai Zhao</a><sup>1</sup>,</span>
             <span class="author-block">
-              <a href="https://zhaoyi11.github.io/">Yi Zhao</a><sup>1</sup>,</span>
-            <span class="author-block">
-              <a href="https://lizhyun.github.io/">Zhiyuan Li</a><sup>2</sup>,
-            </span>
-            <span class="author-block">
-              <a href="https://users.aalto.fi/~kannalj1/">Juho Kannala</a><sup>1,3</sup>,
+              <a href="https://lizhyun.github.io/">Zhiyuan Li</a><sup>1</sup>,
             </span>
             <span class="author-block">
               <a href="https://rl.aalto.fi/team/">Joni Pajarinen</a><sup>1</sup>,
@@ -101,9 +103,9 @@
           </div>
 
           <div class="is-size-5 publication-authors">
-            <span class="author-block"><sup>1</sup>Aalto University,</span>
-            <span class="author-block"><sup>2</sup>University of Electronic Science and Technology of China,</span>
-            <span class="author-block"><sup>3</sup>University of Oulu</span>
+            <span class="author-block"><sup>1</sup>Department of Electrical Engineering and Automation, Aalto University</span>
+            <!-- <span class="author-block"><sup>2</sup>University of Electronic Science and Technology of China,</span>
+            <span class="author-block"><sup>3</sup>University of Oulu</span> -->
             
           </div>
 
@@ -111,7 +113,7 @@
             <div class="publication-links">
               <!-- PDF Link. -->
               <span class="link-block">
-                <a href="https://arxiv.org/pdf/2311.01953"
+                <a href="https://arxiv.org/pdf/2205.10016"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                       <i class="fas fa-file-pdf"></i>
@@ -120,7 +122,7 @@
                 </a>
               </span>
               <span class="link-block">
-                <a href="https://arxiv.org/pdf/2311.01953"
+                <a href="https://arxiv.org/pdf/2205.10016"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                       <i class="ai ai-arxiv"></i>
@@ -140,7 +142,7 @@
               </span> -->
               <!-- Code Link. -->
               <span class="link-block">
-                <a href="https://github.com/wenshuaizhao/optimappo"
+                <a href="https://github.com/wenshuaizhao/spmarl"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                       <i class="fab fa-github"></i>
@@ -166,79 +168,9 @@
   </div>
 </section>
 
-<!-- <section class="hero teaser">
-  <div class="container is-max-desktop">
-    <div class="hero-body">
-      <video id="teaser" autoplay muted loop playsinline height="100%">
-        <source src="./static/videos/teaser.mp4"
-                type="video/mp4">
-      </video>
-      <h2 class="subtitle has-text-centered">
-        <span class="dnerf">Nerfies</span> turns selfie videos from your phone into
-        free-viewpoint
-        portraits.
-      </h2>
-    </div>
-  </div>
-</section> -->
 
 
-<!-- <section class="hero is-light is-small">
-  <div class="hero-body">
-    <div class="container">
-      <div id="results-carousel" class="carousel results-carousel">
-        <div class="item item-steve">
-          <video poster="" id="steve" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/steve.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-chair-tp">
-          <video poster="" id="chair-tp" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/chair-tp.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-shiba">
-          <video poster="" id="shiba" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/shiba.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-fullbody">
-          <video poster="" id="fullbody" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/fullbody.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-blueshirt">
-          <video poster="" id="blueshirt" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/blueshirt.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-mask">
-          <video poster="" id="mask" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/mask.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-coffee">
-          <video poster="" id="coffee" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/coffee.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-        <div class="item item-toby">
-          <video poster="" id="toby" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/toby2.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-      </div>
-    </div>
-  </div>
-</section> -->
+
 
 
 <section class="section">
@@ -249,44 +181,14 @@
         <h2 class="title is-3">Abstract</h2>
         <div class="content has-text-justified">
           <p>
-            <i>Relative overgeneralization</i> (RO) occurs in cooperative multi-agent learning tasks 
-            when agents converge towards a suboptimal joint policy due to overfitting to suboptimal behaviors 
-            of other agents. No methods have been proposed for addressing RO in multi-agent policy gradient (MAPG) 
-            methods although these methods produce state-of-the-art results. 
-            To address this gap, we propose a general, yet simple, framework to enable 
-            optimistic updates in MAPG methods that alleviate the RO problem. 
-            Our approach involves clipping the advantage to eliminate negative values, 
-            thereby facilitating optimistic updates in MAPG. The optimism prevents 
-            individual agents from quickly converging to a local optimum. 
-            Additionally, we provide a formal analysis to show that the proposed method 
-            retains optimality at a fixed point. In extensive evaluations on 
-            a diverse set of tasks including the <i>Multi-agent MuJoCo</i> and <i>Overcooked</i> 
-            benchmarks, our method outperforms strong baselines on 13 out of 19 
-            tested tasks and matches the performance on the rest.
+            The number of agents can be an effective curriculum variable for controlling the difficulty of multi-agent reinforcement learning (MARL) tasks.
+Existing work typically uses manually defined curricula such as linear schemes. We identify two potential flaws while applying existing reward-based automatic curriculum learning methods in MARL: (1) The expected episode return used to measure task difficulty has high variance; (2) Credit assignment difficulty can be exacerbated in tasks where increasing the number of agents yields higher returns which is common in many MARL tasks.
+To address these issues, we propose to control the curriculum by using a TD-error based <i>learning progress </i> measure and by letting the curriculum proceed from an initial context distribution to the final task specific one. 
+Since our approach maintains a distribution over the number of agents and
+measures learning progress rather than absolute performance, which often increases with the number of agents, we alleviate problem (2). Moreover, the learning progress measure naturally alleviates problem (1) by
+aggregating returns. In three challenging sparse-reward MARL benchmarks, our approach outperforms state-of-the-art baselines.
           </p>
-          <!-- <p>
-            Our approach augments neural radiance fields
-            (NeRF) by optimizing an
-            additional continuous volumetric deformation field that warps each observed point into a
-            canonical 5D NeRF.
-            We observe that these NeRF-like deformation fields are prone to local minima, and
-            propose a coarse-to-fine optimization method for coordinate-based models that allows for
-            more robust optimization.
-            By adapting principles from geometry processing and physical simulation to NeRF-like
-            models, we propose an elastic regularization of the deformation field that further
-            improves robustness.
-          </p>
-          <p>
-            We show that <span class="dnerf">Nerfies</span> can turn casually captured selfie
-            photos/videos into deformable NeRF
-            models that allow for photorealistic renderings of the subject from arbitrary
-            viewpoints, which we dub <i>"nerfies"</i>. We evaluate our method by collecting data
-            using a
-            rig with two mobile phones that take time-synchronized photos, yielding train/validation
-            images of the same pose at different viewpoints. We show that our method faithfully
-            reconstructs non-rigidly deforming scenes and reproduces unseen views with high
-            fidelity.
-          </p> -->
+          
         </div>
       </div>
     </div>
@@ -311,134 +213,113 @@
 <section class="section">
   <div class="container is-max-desktop">
 
-    <!-- <div class="columns is-centered"> -->
-
-      <!-- Visual Effects. -->
-      <!-- <div class="column">
-        <div class="content">
-          <h2 class="title is-3">Visual Effects</h2>
-          <p>
-            Using <i>nerfies</i> you can create fun visual effects. This Dolly zoom effect
-            would be impossible without nerfies since it would require going through a wall.
-          </p>
-          <video id="dollyzoom" autoplay controls muted loop playsinline height="100%">
-            <source src="./static/videos/dollyzoom-stacked.mp4"
-                    type="video/mp4">
-          </video>
-        </div>
-      </div> -->
-      <!--/ Visual Effects. -->
-
-      <!-- Matting. -->
-      <!-- <div class="column">
-        <h2 class="title is-3">Matting</h2>
-        <div class="columns is-centered">
-          <div class="column content">
-            <p>
-              As a byproduct of our method, we can also solve the matting problem by ignoring
-              samples that fall outside of a bounding box during rendering.
-            </p>
-            <video id="matting-video" controls playsinline height="100%">
-              <source src="./static/videos/matting.mp4"
-                      type="video/mp4">
-            </video>
-          </div>
-
-        </div>
-      </div> -->
-    <!-- </div> -->
-    <!--/ Matting. -->
-
     <!-- Animation. -->
     <div class="columns is-centered">
       <div class="column is-full-width">
+        <h2 class="title is-3">Motivation</h2>
+        <div class="content has-text-justified">
+          <p>
+            In the MPE <i>Simple-Spread</i> task, agents (blue circles) need to cover as many landmarks (red circles) as possible. 
+            With the number of landmarks fixed, 20 agents shown on the right can easily complete the task and achieve higher returns compared to 8 agents on the left. 
+            However, a higher number of agents exacerbates the credit assignment problem in policy learning.
+          </p>
+        </div>
+
+        <div class="content" style="display: flex; justify-content: center; align-items: flex-start; gap: 40px;">
+          <figure style="text-align: center; margin: 0;">
+              <img src="./docs/mpe_8_agents.png" width="200" />
+              <figcaption>8 agents in MPE</figcaption>
+          </figure>
+          <figure style="text-align: center; margin: 0;">
+              <img src="./docs/mpe_20_agents.png" width="200" />
+              <figcaption>20 agents in MPE</figcaption>
+          </figure>
+      </div>
+      
+      <br/>
+
         <h2 class="title is-3">Experiments</h2>
 
         <!-- Interpolating. -->
-        <h3 class="title is-4">Matrix Game</h3>
+        <h3 class="title is-4">Simple Spread</h3>
         <div class="content has-text-justified">
           <p>
-            The matrix games present severe relative overgeneralization problem. The way our method solves the RO problem is well
-            illustrated by the following figure.
-          </p>
+            Comparison on the <em>Simple-Spread</em> task, where the target is set with <span style="font-style: italic;">8</span> agents and <span style="font-style: italic;">8</span> landmarks. 
+            The plots are averaged over 5 random seeds and the shadow area denotes the 95% confidence intervals. 
+            The <strong>left</strong> figure shows the evaluation returns on the target task with <span style="font-style: italic;">8</span> agents. 
+            Note that the x-axis represents the samples collected from the environment, which is proportional to the number of agents. 
+            The <strong>middle</strong> figure presents the generated curriculum from different methods, 
+            where SPMARL and SPRLM first generate more agents and then converge to the target <span style="font-style: italic;">8</span> agents, 
+            while ALPGMM and VACL always generate more agents. 
+            The <strong>right</strong> figure shows the episode returns on the training tasks. 
+            The ALPGMM algorithm achieves the highest because it samples tasks with more than <span style="font-style: italic;">14</span> agents.
+        </p>
         </div>
         <div class="content has-text-justified">
             <!-- <div class="column is-3 has-text-centered"> -->
-              <img src="./static/figs/matrix.png" width="800" class="center"/>
+              <img src="./docs/simple_spread.png" width="800" class="center"/>
               <!-- <p>Start Frame</p> -->
             <!-- </div> -->
           </div>
-        <!-- <div class="columns is-vcentered interpolation-panel">
-          <div class="column is-3 has-text-centered">
-            <img src="./static/images/interpolate_start.jpg"
-                 class="interpolation-image"
-                 alt="Interpolate start reference image."/>
-            <p>Start Frame</p>
-          </div>
-          <div class="column interpolation-video-column">
-            <div id="interpolation-image-wrapper">
-              Loading...
-            </div>
-            <input class="slider is-fullwidth is-large is-info"
-                   id="interpolation-slider"
-                   step="1" min="0" max="100" value="0" type="range">
-          </div>
-          <div class="column is-3 has-text-centered">
-            <img src="./static/images/interpolate_end.jpg"
-                 class="interpolation-image"
-                 alt="Interpolation end reference image."/>
-            <p class="is-bold">End Frame</p>
-          </div>
-        </div> -->
+        
         <br/>
         <!--/ Interpolating. -->
 
         <!-- Re-rendering. -->
-        <h3 class="title is-4">Multi-Agent MuJoCo</h3>
+        <h3 class="title is-4">XOR Game</h3>
         <div class="content has-text-justified">
           <p>
-            Our method consistently outperforms the baselines on the complex MA-MuJoCo benchmark. Interesting, our method usually learns slower
-            but eventually converges to a better policy.
-          </p>
+            Comparison on the 20-player <em>XOR</em> game where each agent needs to output different actions to succeed. 
+            While the linear curriculum from few to more (<em>linear</em>) and <em>alpgmm</em> successfully achieve optima eventually, 
+            SPRLM and SPMARL demonstrate a faster convergence.
+        </p>
+        
         </div>
         <div class="content has-text-justified">
             <!-- <div class="column is-3 has-text-centered"> -->
-              <img src="./static/figs/mujoco_full.jpg" width="800" class="center"/>
+              <img src="./docs/matrix.png" width="800" class="center"/>
               <!-- <p>Start Frame</p> -->
             <!-- </div> -->
           </div>
         <!--/ Re-rendering. -->
 
         <!-- Re-rendering. -->
-        <h3 class="title is-4">Overcooked</h3>
+        <h3 class="title is-4">SMAC-v2 Tasks</h3>
         <div class="content has-text-justified">
           <p>
-            On another benchmark Overcooked with discrete action spaces, our method also shows improved performance. 
-          </p>
+            Comparison on SMACv2 <em>Protoss</em> tasks. From top to bottom row, the tasks are 
+            <em>Terran 5 vs. 5</em>, <em>Terran 6 vs. 6</em>, <em>Zerg 5 vs. 5</em>, and <em>Zerg 6 vs. 6</em>. 
+            Across all four tasks, SPMARL achieves performance that is comparable to or better than all baseline methods.
+        </p>
+        
         </div>
         <div class="content has-text-justified">
             <!-- <div class="column is-3 has-text-centered"> -->
-              <img src="./static/figs/overcooked_full.jpg" width="800" class="center"/>
+              <img src="./docs/terran_5v5.png" width="800" class="center"/>
+              <img src="./docs/terran_6v6.png" width="800" class="center"/>
+              <img src="./docs/zerg_5v5.png" width="800" class="center"/>
+              <img src="./docs/zerg_5v5.png" width="800" class="center"/>
               <!-- <p>Start Frame</p> -->
             <!-- </div> -->
           </div>
         <!--/ Re-rendering. -->
 
         <!-- Re-rendering. -->
-        <h3 class="title is-4">Why Optimistic DQN not working</h3>
+        <h3 class="title is-4">Ablation on V<sub style="font-size: 0.8em;">LB</sub></h3>
         <div class="content has-text-justified">
           <p>
-            Similar optimistic update has been used in DQN based methods. However, the optimism exacerbates the Q overestimation and thus
-            fails showing the benefit of optimism. In contrast, optimistic MAPG methods avoid this problem naturally with the on-policy value 
-            estimation. 
-          </p>
+            Ablation of V<sub style="font-size: 0.8em;">LB</sub> on SMACv2 <em>Protoss</em> tasks. 
+            From top to bottom, the tasks are <em>Protoss 5 vs. 5</em> and <em>Protoss 6 vs. 6</em>. 
+            The results indicate that SPMARL performs robustly across a broad range of V<sub style="font-size: 0.8em;">LB</sub>.
+        </p>
         </div>
         <div class="content has-text-justified">
-            <!-- <div class="column is-3 has-text-centered"> -->
-              <img src="./static/figs/overestimation.png" width="500" class="center"/>
-              <!-- <p>Start Frame</p> -->
-            <!-- </div> -->
-          </div>
+          <!-- <div class="column is-3 has-text-centered"> -->
+            <img src="./docs/protoss_5v5_ablate.png" width="800" class="center"/>
+            <img src="./docs/protoss_6v6_ablate.png" width="800" class="center"/>
+           
+          <!-- </div> -->
+        </div>
         <!--/ Re-rendering. -->
 
       </div>
@@ -446,32 +327,6 @@
     <!--/ Animation. -->
 
 
-    <!-- Concurrent Work. -->
-    <!-- <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3">Related Links</h2>
-
-        <div class="content has-text-justified">
-          <p>
-            There's a lot of excellent work that was introduced around the same time as ours.
-          </p>
-          <p>
-            <a href="https://arxiv.org/abs/2104.09125">Progressive Encoding for Neural Optimization</a> introduces an idea similar to our windowed position encoding for coarse-to-fine optimization.
-          </p>
-          <p>
-            <a href="https://www.albertpumarola.com/research/D-NeRF/index.html">D-NeRF</a> and <a href="https://gvv.mpi-inf.mpg.de/projects/nonrigid_nerf/">NR-NeRF</a>
-            both use deformation fields to model non-rigid scenes.
-          </p>
-          <p>
-            Some works model videos with a NeRF by directly modulating the density, such as <a href="https://video-nerf.github.io/">Video-NeRF</a>, <a href="https://www.cs.cornell.edu/~zl548/NSFF/">NSFF</a>, and <a href="https://neural-3d-video.github.io/">DyNeRF</a>
-          </p>
-          <p>
-            There are probably many more by the time you are reading this. Check out <a href="https://dellaert.github.io/NeRF/">Frank Dellart's survey on recent NeRF papers</a>, and <a href="https://github.com/yenchenlin/awesome-NeRF">Yen-Chen Lin's curated list of NeRF papers</a>.
-          </p>
-        </div>
-      </div>
-    </div> -->
-    <!--/ Concurrent Work. -->
 
   </div>
 </section>
@@ -480,11 +335,11 @@
 <section class="section" id="BibTeX">
   <div class="container is-max-desktop content">
     <h2 class="title">BibTeX</h2>
-    <pre><code>@inproceedings{zhao2024optimistic,
-        title={Optimistic Multi-Agent Policy Gradient},
-        author={Zhao, Wenshuai and Zhao, Yi and Li, Zhiyuan and Kannala, Juho and Pajarinen, Joni},
+    <pre><code>@inproceedings{zhao2025learning,
+        title={Learning Progress Driven Multi-Agent Curriculum},
+        author={Zhao, Wenshuai and Li, Zhiyuan and Pajarinen, Joni},
         booktitle={Proceedings of the International Conference on Machine Learning},
-        year={2024}
+        year={2025}
       }</code></pre>
   </div>
 </section>
@@ -492,15 +347,7 @@
 
 <footer class="footer">
   <div class="container">
-    <!-- <div class="content has-text-centered">
-      <a class="icon-link"
-         href="./static/videos/nerfies_paper.pdf">
-        <i class="fas fa-file-pdf"></i>
-      </a>
-      <a class="icon-link" href="https://github.com/keunhong" class="external-link" disabled>
-        <i class="fab fa-github"></i>
-      </a>
-    </div> -->
+    
     <div class="columns is-centered">
       <div class="column is-8">
         <div class="content">

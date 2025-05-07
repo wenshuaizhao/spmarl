@@ -49,6 +49,7 @@ body {
 
 .publication-title {
     font-family: 'Google Sans', sans-serif;
+    white-space: nowrap;
 }
 
 .publication-authors {
