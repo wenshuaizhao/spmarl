@@ -35,10 +35,10 @@ From top to bottom, the tasks are *Terran 5v5*, *Terran 6v6*, *Zerg 5v5*, *Zerg 
 ## Citation
 If you found this code is useful for your work, please cite our paper:
 ```
-@article{zhao2022learning,
+@article{zhao2025learning,
   title={Learning Progress Driven Multi-Agent Curriculum},
   author={Zhao, Wenshuai and Li, Zhiyuan and Pajarinen, Joni},
-  journal={arXiv preprint arXiv:2205.10016},
-  year={2022}
+  journal={Proceedings of the International Conference on Machine Learning},
+  year={2025}
 }
 ```
